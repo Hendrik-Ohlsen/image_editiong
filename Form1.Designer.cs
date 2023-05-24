@@ -28,7 +28,10 @@
             this.btnReset = new System.Windows.Forms.Button();
             this.btnGreyMulti = new System.Windows.Forms.Button();
             this.btnBrightenup = new System.Windows.Forms.Button();
+            this.pictureBox2 = new System.Windows.Forms.PictureBox();
+            this.getHistogram = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.SuspendLayout();
             // 
             // pictureBox1
@@ -41,7 +44,7 @@
             // 
             // btnGreysacle
             // 
-            this.btnGreysacle.Location = new System.Drawing.Point(1214, 39);
+            this.btnGreysacle.Location = new System.Drawing.Point(1210, 183);
             this.btnGreysacle.Name = "btnGreysacle";
             this.btnGreysacle.Size = new System.Drawing.Size(128, 23);
             this.btnGreysacle.TabIndex = 1;
@@ -51,7 +54,7 @@
             // 
             // btnReset
             // 
-            this.btnReset.Location = new System.Drawing.Point(1214, 98);
+            this.btnReset.Location = new System.Drawing.Point(1210, 242);
             this.btnReset.Name = "btnReset";
             this.btnReset.Size = new System.Drawing.Size(128, 23);
             this.btnReset.TabIndex = 2;
@@ -61,7 +64,7 @@
             // 
             // btnGreyMulti
             // 
-            this.btnGreyMulti.Location = new System.Drawing.Point(1214, 159);
+            this.btnGreyMulti.Location = new System.Drawing.Point(1210, 303);
             this.btnGreyMulti.Name = "btnGreyMulti";
             this.btnGreyMulti.Size = new System.Drawing.Size(128, 23);
             this.btnGreyMulti.TabIndex = 3;
@@ -71,7 +74,7 @@
             // 
             // btnBrightenup
             // 
-            this.btnBrightenup.Location = new System.Drawing.Point(1214, 213);
+            this.btnBrightenup.Location = new System.Drawing.Point(1210, 357);
             this.btnBrightenup.Name = "btnBrightenup";
             this.btnBrightenup.Size = new System.Drawing.Size(128, 23);
             this.btnBrightenup.TabIndex = 4;
@@ -79,11 +82,31 @@
             this.btnBrightenup.UseVisualStyleBackColor = true;
             this.btnBrightenup.Click += new System.EventHandler(this.btnBrightenup_Click);
             // 
+            // pictureBox2
+            // 
+            this.pictureBox2.Location = new System.Drawing.Point(1210, 39);
+            this.pictureBox2.Name = "pictureBox2";
+            this.pictureBox2.Size = new System.Drawing.Size(417, 103);
+            this.pictureBox2.TabIndex = 5;
+            this.pictureBox2.TabStop = false;
+            // 
+            // getHistogram
+            // 
+            this.getHistogram.Location = new System.Drawing.Point(1210, 421);
+            this.getHistogram.Name = "getHistogram";
+            this.getHistogram.Size = new System.Drawing.Size(128, 23);
+            this.getHistogram.TabIndex = 6;
+            this.getHistogram.Text = "Histogram";
+            this.getHistogram.UseVisualStyleBackColor = true;
+            this.getHistogram.Click += new System.EventHandler(this.getHistogram_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1459, 845);
+            this.ClientSize = new System.Drawing.Size(1713, 902);
+            this.Controls.Add(this.getHistogram);
+            this.Controls.Add(this.pictureBox2);
             this.Controls.Add(this.btnBrightenup);
             this.Controls.Add(this.btnGreyMulti);
             this.Controls.Add(this.btnReset);
@@ -93,6 +116,7 @@
             this.Text = "Form1";
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -104,6 +128,8 @@
         private System.Windows.Forms.Button btnReset;
         private System.Windows.Forms.Button btnGreyMulti;
         private System.Windows.Forms.Button btnBrightenup;
+        private System.Windows.Forms.PictureBox pictureBox2;
+        private System.Windows.Forms.Button getHistogram;
     }
 }
 

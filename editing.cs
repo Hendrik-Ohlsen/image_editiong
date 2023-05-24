@@ -11,36 +11,6 @@ using System.Threading.Tasks;
 namespace Bild_graustufen {
     internal class editing {
         object lockObject = new object();
-        /*private void multi_to_sw(Bitmap input) {
-            Rectangle rect = new Rectangle(0, 0, input.Width, input.Height);
-            BitmapData bmpData = input.LockBits(rect, ImageLockMode.ReadWrite, input.PixelFormat);
-            try {
-                int number_threads = Environment.ProcessorCount;
-                Thread[] threads = new Thread[number_threads];
-
-                for (int i = 0; i < number_threads; i++) {
-                    threads[i] = new Thread(() =>
-
-                    {
-                        for (int y = i; y < input.Height; y += number_threads) {
-                            for (int x = 0; x < input.Width; x++) {
-                                lock (lockObject) {
-                                    change_pixel(x, y, bmpData);
-                                }
-                            }
-                        }
-                    });
-                    threads[i].Start();
-                }
-                foreach (Thread thread in threads) {
-                    thread.Join();
-                }
-            }
-            finally {
-                input.UnlockBits(bmpData);
-            }
-            //return input;
-        }*/
         public Bitmap to_greyscale_multi(Bitmap input) {
 
             //Bitmap bmp = Bitmap.FromFile(inputFile) as Bitmap;
@@ -146,6 +116,38 @@ namespace Bild_graustufen {
                     buffer[offset + 2] += 25;
                 }
             }
+        }
+        public Bitmap create_histogram(Bitmap image) {
+            int[] distribution = new int[256];
+            Bitmap grey = to_greyscale_multi(image);
+
+            var rect = new Rectangle(0, 0, grey.Width, grey.Height);
+            var data = grey.LockBits(rect, ImageLockMode.ReadWrite, grey.PixelFormat);
+
+            var depth = Bitmap.GetPixelFormatSize(data.PixelFormat) / 8; //bytes per pixel
+            var buffer = new byte[data.Width * data.Height * depth];
+
+            //copy pixels to buffer
+            Marshal.Copy(data.Scan0, buffer, 0, buffer.Length);
+
+            //to get brightness of every pixel i+=4 is the right value
+            for(int i = 0; i < buffer.Length; i+=8) {
+                distribution[buffer[i]] += 1;
+            }
+
+            var bitmap = new Bitmap(512, 250);
+            var gfx = Graphics.FromImage(bitmap);
+            gfx.Clear(Color.White);
+            var black = new Pen(Color.Black, 2);
+
+            for(int i = 0; i<distribution.Length; i++) {
+                gfx.DrawLine(black, new Point(i *2, bitmap.Height), new Point(i *2, bitmap.Height - (int) ((float) distribution[i] / (float) distribution.Max()*bitmap.Height)));
+                var maxi = distribution.Max();
+                var poistin = distribution[i];
+                float manuel_ration = (float) poistin / (float) maxi;
+                double ratio = (distribution[i]*1 / distribution.Max()) * 100;
+            }
+            return bitmap;
         }
     }
 }
