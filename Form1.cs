@@ -86,10 +86,13 @@ namespace Bild_graustufen {
         }
 
         private void btnBrightenup_Click(object sender, EventArgs e) {
-            pictureBox1.Image = func.brighten_up(image);
+            pictureBox1.Image = func.brighten_up(image, Convert.ToInt32(txbBrightness.Text));
             pictureBox1.Refresh();
             pictureBox1.Visible = true;
             Bitmap test = func.create_histogram(image);
+            pictureBox2.Image = test;
+            pictureBox2.Refresh();
+            pictureBox2.Visible = true;
         }
 
         private void getHistogram_Click(object sender, EventArgs e) {

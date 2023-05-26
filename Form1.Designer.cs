@@ -30,6 +30,7 @@
             this.btnBrightenup = new System.Windows.Forms.Button();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.getHistogram = new System.Windows.Forms.Button();
+            this.txbBrightness = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.SuspendLayout();
@@ -100,11 +101,20 @@
             this.getHistogram.UseVisualStyleBackColor = true;
             this.getHistogram.Click += new System.EventHandler(this.getHistogram_Click);
             // 
+            // txbBrightness
+            // 
+            this.txbBrightness.Location = new System.Drawing.Point(1373, 357);
+            this.txbBrightness.Name = "txbBrightness";
+            this.txbBrightness.Size = new System.Drawing.Size(100, 22);
+            this.txbBrightness.TabIndex = 7;
+            this.txbBrightness.Text = "25";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1713, 902);
+            this.Controls.Add(this.txbBrightness);
             this.Controls.Add(this.getHistogram);
             this.Controls.Add(this.pictureBox2);
             this.Controls.Add(this.btnBrightenup);
@@ -118,6 +128,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -130,6 +141,7 @@
         private System.Windows.Forms.Button btnBrightenup;
         private System.Windows.Forms.PictureBox pictureBox2;
         private System.Windows.Forms.Button getHistogram;
+        private System.Windows.Forms.TextBox txbBrightness;
     }
 }
 
