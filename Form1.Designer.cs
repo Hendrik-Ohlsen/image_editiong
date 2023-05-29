@@ -31,6 +31,8 @@
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.getHistogram = new System.Windows.Forms.Button();
             this.txbBrightness = new System.Windows.Forms.TextBox();
+            this.btnDeeps = new System.Windows.Forms.Button();
+            this.btnLights = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.SuspendLayout();
@@ -109,11 +111,33 @@
             this.txbBrightness.TabIndex = 7;
             this.txbBrightness.Text = "25";
             // 
+            // btnDeeps
+            // 
+            this.btnDeeps.Location = new System.Drawing.Point(1210, 477);
+            this.btnDeeps.Name = "btnDeeps";
+            this.btnDeeps.Size = new System.Drawing.Size(128, 23);
+            this.btnDeeps.TabIndex = 8;
+            this.btnDeeps.Text = "Tiefen";
+            this.btnDeeps.UseVisualStyleBackColor = true;
+            this.btnDeeps.Click += new System.EventHandler(this.btnDeeps_Click);
+            // 
+            // btnLights
+            // 
+            this.btnLights.Location = new System.Drawing.Point(1210, 543);
+            this.btnLights.Name = "btnLights";
+            this.btnLights.Size = new System.Drawing.Size(128, 23);
+            this.btnLights.TabIndex = 9;
+            this.btnLights.Text = "Lichter";
+            this.btnLights.UseVisualStyleBackColor = true;
+            this.btnLights.Click += new System.EventHandler(this.btnLights_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1713, 902);
+            this.Controls.Add(this.btnLights);
+            this.Controls.Add(this.btnDeeps);
             this.Controls.Add(this.txbBrightness);
             this.Controls.Add(this.getHistogram);
             this.Controls.Add(this.pictureBox2);
@@ -142,6 +166,8 @@
         private System.Windows.Forms.PictureBox pictureBox2;
         private System.Windows.Forms.Button getHistogram;
         private System.Windows.Forms.TextBox txbBrightness;
+        private System.Windows.Forms.Button btnDeeps;
+        private System.Windows.Forms.Button btnLights;
     }
 }
 

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Bild_graustufen {
     internal class editing {
@@ -54,73 +55,126 @@ namespace Bild_graustufen {
                 }
             }
         }
-        public Bitmap brighten_up(Bitmap input, int change) {
+        private struct HSV {
+            public double Hue;
+            public double Saturation;
+            public double Value;
+        }
+        private HSV doubleArrToHSV(double[] doubles) {
+            var HSV = new HSV();
+            HSV.Hue = doubles[0];
+            HSV.Saturation = doubles[1];
+            HSV.Value = doubles[2];
+            return HSV;
+        }
+        public Bitmap brighten_up(Bitmap input, int change, int threshold = 255) {
             Bitmap bmp = new Bitmap(input);
+            //bmp = to_greyscale_multi(bmp);
             var pixel = bmp.GetPixel(0, 0);
 
             double[,,] image_hsv = new double[input.Width, input.Height, 3];
 
-            //var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
-            //var data = bmp.LockBits(rect, ImageLockMode.ReadWrite, bmp.PixelFormat);
-            //var depth = Bitmap.GetPixelFormatSize(data.PixelFormat) / 8; //bytes per pixel
+            var bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, bmp.PixelFormat);
 
-            //var buffer = new byte[data.Width * data.Height * depth];
+            int bytesPerPixel = Bitmap.GetPixelFormatSize(bmp.PixelFormat) / 8;
 
-            //copy pixels to buffer
-            //Marshal.Copy(data.Scan0, buffer, 0, buffer.Length);
+            int height = bmp.Height;
+            int width = bmp.Width;
+            int stride = bmpData.Stride;
+        //divide in n parts/taks
 
-            for (int i = 0; i < input.Width; i++) {
-                for (int j = 0; j < input.Height; j++) {
-                    var temp = RgbToHsv(bmp.GetPixel(i, j).R, bmp.GetPixel(i, j).G, bmp.GetPixel(i, j).B);
-                    image_hsv[i, j, 0] = temp[0];
-                    image_hsv[i, j, 1] = temp[1];
-                    image_hsv[i, j, 2] = temp[2];
+            unsafe {
+                byte* pointer = (byte*)bmpData.Scan0;
+
+                //for (int i = 0; i < width; i++) {
+                Parallel.For(0, width, i =>
+                {
+                    //for (int j = 0; j < height; j++) {
+                    Parallel.For(0, height, j =>
+                    {
+                        byte* pix = pointer + j * stride + i * bytesPerPixel;
+                        var temp = RgbToHsv(pix[2], pix[1], pix[0]);
+                        image_hsv[i, j, 0] = temp[0];
+                        image_hsv[i, j, 1] = temp[1];
+                        image_hsv[i, j, 2] = temp[2];
+                        //}
+                    });
+                });
+                //}
+
+                //for (int i = 0; i < width; i++) {
+                if (threshold == 255) {
+                    Parallel.For(0, width, i =>
+                    {
+                        //for (int j = 0; j < height; j++) {
+                        Parallel.For(0, height, j =>
+                        {
+                            image_hsv[i, j, 2] *= 1 + ((double)change / 100);
+                            //}
+                        });
+                    });
+                    //}
                 }
-            }
-
-            for(int i = 0; i < input.Width; i++) {
-                for (int j = 0; j < input.Height; j++) {
-                    image_hsv[i, j, 2] *= 1 + ((double)change / 100);
-                    //image_hsv[i, j, 2] *= 1.05;
+                else if (threshold == 25) {
+                    Parallel.For(0, width, i =>
+                    {
+                        //for (int j = 0; j < height; j++) {
+                        Parallel.For(0, height, j =>
+                        {
+                            if (image_hsv[i, j, 2] < 0.25) {
+                                image_hsv[i, j, 2] *= 1 + ((double)change / 100);
+                            }
+                            //}
+                        });
+                    });
                 }
-            }
-            for(int i = 0; i < input.Width; i++) {
-                for (int j = 0; j < input.Height; j++) {
-                    var Pixe = HsvToRgb(image_hsv[i, j, 0], image_hsv[i, j, 1], image_hsv[i, j, 2]);
-                    bmp.SetPixel(i, j, Pixe);
+                else if (threshold == 190) {
+                    Parallel.For(0, width, i =>
+                    {
+                        //for (int j = 0; j < height; j++) {
+                        Parallel.For(0, height, j =>
+                        {
+                            if (image_hsv[i, j, 2] > 0.74) {
+                                image_hsv[i, j, 2] *= 1 - ((double)change / 100);
+                            }
+                            //}
+                        });
+                    });
                 }
+                pointer = (byte*)bmpData.Scan0;
+                //for (int i = 0; i < width; i++) {
+                Parallel.For(0, width, i =>
+                {
+                    //for (int j = 0; j < height; j++) {
+                    Parallel.For(0, height, j =>
+                    {
+                        byte* pix = pointer + j * stride + i * bytesPerPixel;
+                        var Pixe = HsvToRgb(image_hsv[i, j, 0], image_hsv[i, j, 1], image_hsv[i, j, 2]);
+                        //bmp.SetPixel(i, j, Pixe);
+                        pix[0] = Pixe.B;
+                        pix[1] = Pixe.G;
+                        pix[2] = Pixe.R;
+                    });
+                });
+                //}
+
+                //for(int i = 0; i < width; i++) {
+                //    for (int j = 0; j < height; j++) {
+                //        byte* pix = pointer + j * bmpData.Stride + i * bytesPerPixel;
+                //        var fac = 1 + change / 100d * 0.114;
+                //        pix[0] = (byte) (pix[0] + (1+change/100d*0.114));
+                //        pix[1] = (byte) (pix[1] + (1 + change / 100d*0.587));
+                //        pix[2] = (byte) (pix[2] + (1 + change / 100d * 0.299));
+                //    }
+                //}
+                bmp.UnlockBits(bmpData);
             }
+            image_hsv = null;
 
-            //Parallel.Invoke(
-            //    () => {
-            //        //upper-left
-            //        Process_brighten_up(buffer, 0, 0, data.Width / 2, data.Height / 2, data.Width, depth, change);
-            //    },
-            //    () => {
-            //        //lower-right
-            //        Process_brighten_up(buffer, data.Width / 2, data.Height / 2, data.Width, data.Height, data.Width, depth, change);
-            //    },
-            //    () =>
-            //    {
-            //        //upper-right
-            //        Process_brighten_up(buffer, data.Width / 2, 0, data.Width, data.Height / 2, data.Width, depth, change);
-            //    },
-            //    () =>
-            //    {
-            //        //lower-left
-            //        Process_brighten_up(buffer, 0, data.Height / 2, data.Width, data.Height, data.Width, depth, change);
-            //    }
-            //);
-
-            ////Copy the buffer back to image
-            //Marshal.Copy(buffer, 0, data.Scan0, buffer.Length);
-
-            //bmp.UnlockBits(data);
-
-            //bmp.Save(outputFile, ImageFormat.Jpeg);
             MessageBox.Show("fertig");
             return bmp;
         }
+        //private void process_to_hsv(int[])
 
         private Bitmap distribution_to_bitmap(int[] distribution) {
             var bitmap = new Bitmap(512, 250);
@@ -138,7 +192,7 @@ namespace Bild_graustufen {
             }
             return bitmap;
         }
-        public Bitmap create_histogram(Bitmap image) {
+        private int[] create_distribution(Bitmap image) {
             int[] distribution = new int[256];
             Bitmap grey = to_greyscale_multi(image);
 
@@ -152,18 +206,56 @@ namespace Bild_graustufen {
             Marshal.Copy(data.Scan0, buffer, 0, buffer.Length);
 
             //to get brightness of every pixel i+=4 is the right value
-            for(int i = 0; i < buffer.Length; i+=8) {
+            for (int i = 0; i < buffer.Length; i += 8) {
                 distribution[buffer[i]] += 1;
             }
-            return distribution_to_bitmap(distribution);
+            return distribution;
+        }
+        public Bitmap create_histogram(Bitmap image) {
+            return distribution_to_bitmap(create_distribution(image));
+        }
+        private double find_max(double r, double g, double b) {
+            var max = r;
+            if(g > max) {
+                max = g;
+            }
+            if(b > max) {
+                max = b;
+            }
+            return max;
+        }
+        private int find_max(int a, int b) {
+            if (a > b) {
+                return a;
+            }
+            return b;
+        }
+        private double find_min(double r, double g, double b) {
+            var min = r;
+            if ( g < min) {
+                min = g;
+            }
+            if (b < min) {
+                min =b;
+            }
+            return min;
+        }
+        private int find_min(int a, int b) {
+            if (a < b) {
+                return a;
+            }
+            return b;
         }
         private double[] RgbToHsv(double r, double g, double b) {
             double[] hsv = new double[3];
-            r = r / 255.0;
-            g = g / 255.0;
-            b = b / 255.0;
-            double max = new[] { r, g, b }.Max();
-            double min = new[] { r, g, b }.Min();
+            r /= 255.0;
+            g /= 255.0;
+            b /= 255.0;
+            //double max_ = new[] { r, g, b }.Max();
+            var max = find_max(r, g, b);
+            //var ma = Math.Max(r, Math.Max(g,b));
+            //double min_ = new[] { r, g, b }.Min();
+            var min = find_min(r, g, b);
             double delta = max - min;
             hsv[1] = max != 0 ? delta / max : 0;
             hsv[2] = max;
@@ -194,24 +286,63 @@ namespace Bild_graustufen {
             int q = Math.Max(Math.Min(Convert.ToInt32(v * (1 - f * saturation)), 255), 0);
             int t = Math.Max(Math.Min(Convert.ToInt32(v * (1 - (1 - f) * saturation)), 255), 0);
 
-            if(hi == 0) {
-                return Color.FromArgb((int)v, t, p);
+            switch (hi) {
+                case 0:
+                    return Color.FromArgb((int)v, t, p);
+
+                case 1:
+                    return Color.FromArgb(q, (int)v, p);
+
+                case 2:
+                    return Color.FromArgb(p, (int)v, t);
+
+                case 3:
+                    return Color.FromArgb(p, q, (int)t);
+
+                case 4:
+                    return Color.FromArgb(t, p, (int)v);
+
+                default:
+                    return Color.FromArgb((int)v, p, q);
             }
-            else if (hi == 1) {
-                return Color.FromArgb(q, (int)v, p);
+        }
+        public Bitmap show_black(Bitmap bmp) {
+            var input = new Bitmap(bmp);
+
+            var rect = new Rectangle(0, 0, input.Width, input.Height);
+            var data = input.LockBits(rect, ImageLockMode.ReadWrite, input.PixelFormat);
+
+            var depth = Bitmap.GetPixelFormatSize(data.PixelFormat) / 8; //bytes per pixel
+            var buffer = new byte[data.Width * data.Height * depth];
+
+            //copy pixels to buffer
+            Marshal.Copy(data.Scan0, buffer, 0, buffer.Length);
+
+            //to get brightness of every pixel i+=4 is the right value
+            for (int i = 0; i < buffer.Length; i += 4) {
+                if (buffer[i] + buffer[i+1] + buffer[i+2] == 0) {
+                    buffer[i] = 255;
+                    buffer[i + 1] = 0;
+                    buffer[i + 2] = 0;
+                }
+                else if (buffer[i] + buffer[i + 1] + buffer[i + 2] == 765) {
+                    buffer[i] = 0;
+                    buffer[i + 1] = 0;
+                    buffer[i + 2] = 255;
+                }
             }
-            else if (hi == 2) {
-                return Color.FromArgb(p, (int)v, t);
-            }
-            else if (hi== 3) {
-                return Color.FromArgb(p, q, (int)v);
-            }
-            else if (hi == 4) {
-                return Color.FromArgb(t, p, (int)v);
-            }
-            else {
-                return Color.FromArgb((int)v, p, q);
-            }
+            Marshal.Copy(buffer, 0, data.Scan0, buffer.Length);
+
+            input.UnlockBits(data);
+            MessageBox.Show("FERTIG");
+            return input;
+        }
+        public Bitmap depths(Bitmap input) {
+            var distribution = create_distribution(input);
+            return brighten_up(input, 50, 25);
+        }
+        public Bitmap lights(Bitmap input) {
+            return brighten_up(input, -50, 190);
         }
     }
 }

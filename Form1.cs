@@ -100,6 +100,22 @@ namespace Bild_graustufen {
             pictureBox2.Image = func.create_histogram(image);
             pictureBox2.Refresh();
             pictureBox2.Visible = true;
+
+            pictureBox1.Image = func.show_black(image);
+            pictureBox1.Refresh();
+            pictureBox1.Visible = true;
+        }
+
+        private void btnDeeps_Click(object sender, EventArgs e) {
+            pictureBox1.Image = func.depths(image);
+            pictureBox1.Refresh();
+            pictureBox1.Visible = true;
+        }
+
+        private void btnLights_Click(object sender, EventArgs e) {
+            pictureBox1.Image = func.lights(image);
+            pictureBox1.Refresh();
+            pictureBox1.Visible = true;
         }
     }
 }
