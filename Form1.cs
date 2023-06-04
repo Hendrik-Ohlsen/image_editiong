@@ -117,5 +117,24 @@ namespace Bild_graustufen {
             pictureBox1.Refresh();
             pictureBox1.Visible = true;
         }
+
+        private void btnSharpen_Click(object sender, EventArgs e) {
+            var sharp_util = new sharpening();
+            pictureBox1.Image = sharp_util.sharpe(image);
+            pictureBox1.Refresh();
+            pictureBox1.Visible = true;
+        }
+
+        private void btnContrast_Click(object sender, EventArgs e) {
+            pictureBox1.Image = func.contrast(image, Convert.ToDouble(txbContrast.Text));
+            pictureBox1.Refresh();
+            pictureBox1.Visible = true;
+        }
+
+        private void btnSaturation_Click(object sender, EventArgs e) {
+            pictureBox1.Image = func.change_saturation(image, Convert.ToInt32((txbSaturation.Text).ToString()));
+            pictureBox1.Refresh();
+            pictureBox1.Visible = true;
+        }
     }
 }

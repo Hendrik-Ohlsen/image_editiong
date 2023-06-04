@@ -33,6 +33,11 @@
             this.txbBrightness = new System.Windows.Forms.TextBox();
             this.btnDeeps = new System.Windows.Forms.Button();
             this.btnLights = new System.Windows.Forms.Button();
+            this.btnSharpen = new System.Windows.Forms.Button();
+            this.btnContrast = new System.Windows.Forms.Button();
+            this.txbContrast = new System.Windows.Forms.TextBox();
+            this.btnSaturation = new System.Windows.Forms.Button();
+            this.txbSaturation = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.SuspendLayout();
@@ -131,11 +136,61 @@
             this.btnLights.UseVisualStyleBackColor = true;
             this.btnLights.Click += new System.EventHandler(this.btnLights_Click);
             // 
+            // btnSharpen
+            // 
+            this.btnSharpen.Location = new System.Drawing.Point(1210, 615);
+            this.btnSharpen.Name = "btnSharpen";
+            this.btnSharpen.Size = new System.Drawing.Size(128, 23);
+            this.btnSharpen.TabIndex = 10;
+            this.btnSharpen.Text = "Schärfen";
+            this.btnSharpen.UseVisualStyleBackColor = true;
+            this.btnSharpen.Click += new System.EventHandler(this.btnSharpen_Click);
+            // 
+            // btnContrast
+            // 
+            this.btnContrast.Location = new System.Drawing.Point(1210, 681);
+            this.btnContrast.Name = "btnContrast";
+            this.btnContrast.Size = new System.Drawing.Size(128, 23);
+            this.btnContrast.TabIndex = 11;
+            this.btnContrast.Text = "Kontrast";
+            this.btnContrast.UseVisualStyleBackColor = true;
+            this.btnContrast.Click += new System.EventHandler(this.btnContrast_Click);
+            // 
+            // txbContrast
+            // 
+            this.txbContrast.Location = new System.Drawing.Point(1373, 681);
+            this.txbContrast.Name = "txbContrast";
+            this.txbContrast.Size = new System.Drawing.Size(100, 22);
+            this.txbContrast.TabIndex = 12;
+            // 
+            // btnSaturation
+            // 
+            this.btnSaturation.Location = new System.Drawing.Point(1210, 735);
+            this.btnSaturation.Name = "btnSaturation";
+            this.btnSaturation.Size = new System.Drawing.Size(128, 23);
+            this.btnSaturation.TabIndex = 13;
+            this.btnSaturation.Text = "Sättigung";
+            this.btnSaturation.UseVisualStyleBackColor = true;
+            this.btnSaturation.Click += new System.EventHandler(this.btnSaturation_Click);
+            // 
+            // txbSaturation
+            // 
+            this.txbSaturation.Location = new System.Drawing.Point(1373, 735);
+            this.txbSaturation.Name = "txbSaturation";
+            this.txbSaturation.Size = new System.Drawing.Size(100, 22);
+            this.txbSaturation.TabIndex = 14;
+            this.txbSaturation.Text = "25";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1713, 902);
+            this.Controls.Add(this.txbSaturation);
+            this.Controls.Add(this.btnSaturation);
+            this.Controls.Add(this.txbContrast);
+            this.Controls.Add(this.btnContrast);
+            this.Controls.Add(this.btnSharpen);
             this.Controls.Add(this.btnLights);
             this.Controls.Add(this.btnDeeps);
             this.Controls.Add(this.txbBrightness);
@@ -168,6 +223,11 @@
         private System.Windows.Forms.TextBox txbBrightness;
         private System.Windows.Forms.Button btnDeeps;
         private System.Windows.Forms.Button btnLights;
+        private System.Windows.Forms.Button btnSharpen;
+        private System.Windows.Forms.Button btnContrast;
+        private System.Windows.Forms.TextBox txbContrast;
+        private System.Windows.Forms.Button btnSaturation;
+        private System.Windows.Forms.TextBox txbSaturation;
     }
 }
 
