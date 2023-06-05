@@ -78,8 +78,8 @@ namespace Bild_graustufen {
         }
 
         private void btnGreyMulti_Click(object sender, EventArgs e) {
-            //multi_to_sw(image);
-            pictureBox1.Image = func.to_greyscale_multi(image);
+            //pictureBox1.Image = func.to_greyscale_multi(image);
+            pictureBox1.Image = func.to_greyscale(image);
             pictureBox1.Refresh();
             pictureBox1.Visible = true;
             //Test();

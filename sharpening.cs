@@ -13,7 +13,7 @@ namespace Bild_graustufen {
         editing util = new editing();
 
         public Bitmap sharpe(Bitmap input) {
-            var grey = util.to_greyscale_multi(input);
+            var grey = util.to_greyscale(input);
             var der_right = derivative_to_right(grey);
             var der_under = derivative_under(grey);
             var der_mean = mean(der_under, der_right);

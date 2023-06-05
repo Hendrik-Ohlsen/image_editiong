@@ -13,64 +13,8 @@ using static System.Net.Mime.MediaTypeNames;
 namespace Bild_graustufen {
     internal class editing {
         object lockObject = new object();
-        public Bitmap to_greyscale_multi(Bitmap input) {
+        public Bitmap to_greyscale(Bitmap input) {
             Bitmap bmp = new Bitmap(input);
-
-            var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
-            var data = bmp.LockBits(rect, ImageLockMode.ReadWrite, bmp.PixelFormat);
-            var depth = Bitmap.GetPixelFormatSize(data.PixelFormat) / 8; //bytes per pixel
-
-            var buffer = new byte[data.Width * data.Height * depth];
-
-            //copy pixels to buffer
-            Marshal.Copy(data.Scan0, buffer, 0, buffer.Length);
-            var amount_cores = Environment.ProcessorCount;
-            Action[] processes = new Action[amount_cores];
-
-            for (int i = 0; i < amount_cores; i++) {
-                int x = (data.Width / amount_cores) * i;
-                int y = 0;
-                int endx = (data.Width / amount_cores) * (i + 1);
-                int endy = data.Height;
-                processes[i] = () =>
-                {
-                    Process_greyscale(buffer, x, y, endx, endy, data.Width, depth);
-                };
-            }
-
-            Parallel.Invoke(processes);
-
-            //Copy the buffer back to image
-            Marshal.Copy(buffer, 0, data.Scan0, buffer.Length);
-
-            bmp.UnlockBits(data);
-
-            return bmp;
-        }
-        void Process_greyscale(byte[] buffer, int x, int y, int endx, int endy, int width, int depth) {
-            for (int i = x; i < endx; i++) {
-                for (int j = y; j < endy; j++) {
-                    var offset = ((j * width) + i) * depth;
-                    var b = (buffer[offset] + buffer[offset + 1] + buffer[offset + 2]) / 3;
-                    buffer[offset + 0] = buffer[offset + 1] = buffer[offset + 2] = (byte)b;
-                }
-            }
-        }
-        private struct HSV {
-            public double Hue;
-            public double Saturation;
-            public double Value;
-        }
-        private HSV doubleArrToHSV(double[] doubles) {
-            var HSV = new HSV();
-            HSV.Hue = doubles[0];
-            HSV.Saturation = doubles[1];
-            HSV.Value = doubles[2];
-            return HSV;
-        }
-        public Bitmap brighten_up(Bitmap input, int change, int threshold = 255) {
-            Bitmap bmp = new Bitmap(input);
-            //bmp = to_greyscale_multi(bmp);
             var pixel = bmp.GetPixel(0, 0);
 
             double[,,] image_hsv = new double[input.Width, input.Height, 3];
@@ -82,15 +26,42 @@ namespace Bild_graustufen {
             int height = bmp.Height;
             int width = bmp.Width;
             int stride = bmpData.Stride;
-            //divide in n parts/taks
 
             unsafe {
                 byte* pointer = (byte*)bmpData.Scan0;
 
-                //for (int i = 0; i < width; i++) {
                 Parallel.For(0, width, i =>
                 {
-                    //for (int j = 0; j < height; j++) {
+                    Parallel.For(0, height, j =>
+                    {
+                        byte* pix = pointer + j * stride + i * bytesPerPixel;
+                        var mean = (byte) ((pix[2] + pix[1] + pix[0])/3);
+                        pix[0] = pix[1] = pix[2] = mean;
+                    });
+                });
+                bmp.UnlockBits(bmpData);
+                return bmp;
+            }
+        }
+        public Bitmap brighten_up(Bitmap input, int change, int threshold = 255) {
+            Bitmap bmp = new Bitmap(input);
+            var pixel = bmp.GetPixel(0, 0);
+
+            double[,,] image_hsv = new double[input.Width, input.Height, 3];
+
+            var bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, bmp.PixelFormat);
+
+            int bytesPerPixel = Bitmap.GetPixelFormatSize(bmp.PixelFormat) / 8;
+
+            int height = bmp.Height;
+            int width = bmp.Width;
+            int stride = bmpData.Stride;
+
+            unsafe {
+                byte* pointer = (byte*)bmpData.Scan0;
+
+                Parallel.For(0, width, i =>
+                {
                     Parallel.For(0, height, j =>
                     {
                         byte* pix = pointer + j * stride + i * bytesPerPixel;
@@ -98,28 +69,21 @@ namespace Bild_graustufen {
                         image_hsv[i, j, 0] = temp[0];
                         image_hsv[i, j, 1] = temp[1];
                         image_hsv[i, j, 2] = temp[2];
-                        //}
                     });
                 });
-                //}
 
-                //for (int i = 0; i < width; i++) {
                 if (threshold == 255) {
                     Parallel.For(0, width, i =>
                     {
-                        //for (int j = 0; j < height; j++) {
                         Parallel.For(0, height, j =>
                         {
                             image_hsv[i, j, 2] *= 1 + ((double)change / 100);
-                            //}
                         });
                     });
-                    //}
                 }
                 else if (threshold == 25) {
                     Parallel.For(0, width, i =>
                     {
-                        //for (int j = 0; j < height; j++) {
                         Parallel.For(0, height, j =>
                         {
                             if (image_hsv[i, j, 2] < 0.25) {
@@ -143,31 +107,18 @@ namespace Bild_graustufen {
                     });
                 }
                 pointer = (byte*)bmpData.Scan0;
-                //for (int i = 0; i < width; i++) {
                 Parallel.For(0, width, i =>
                 {
-                    //for (int j = 0; j < height; j++) {
                     Parallel.For(0, height, j =>
                     {
                         byte* pix = pointer + j * stride + i * bytesPerPixel;
                         var Pixe = HsvToRgb(image_hsv[i, j, 0], image_hsv[i, j, 1], image_hsv[i, j, 2]);
-                        //bmp.SetPixel(i, j, Pixe);
                         pix[0] = Pixe.B;
                         pix[1] = Pixe.G;
                         pix[2] = Pixe.R;
                     });
                 });
-                //}
 
-                //for(int i = 0; i < width; i++) {
-                //    for (int j = 0; j < height; j++) {
-                //        byte* pix = pointer + j * bmpData.Stride + i * bytesPerPixel;
-                //        var fac = 1 + change / 100d * 0.114;
-                //        pix[0] = (byte) (pix[0] + (1+change/100d*0.114));
-                //        pix[1] = (byte) (pix[1] + (1 + change / 100d*0.587));
-                //        pix[2] = (byte) (pix[2] + (1 + change / 100d * 0.299));
-                //    }
-                //}
                 bmp.UnlockBits(bmpData);
             }
             image_hsv = null;
@@ -175,7 +126,6 @@ namespace Bild_graustufen {
             MessageBox.Show("fertig");
             return bmp;
         }
-        //private void process_to_hsv(int[])
 
         private Bitmap distribution_to_bitmap(int[] distribution) {
             var bitmap = new Bitmap(512, 250);
@@ -193,18 +143,20 @@ namespace Bild_graustufen {
             }
             return bitmap;
         }
-        private int[] create_distribution(Bitmap image) {
-            int[] distribution = new int[256];
-            Bitmap grey = to_greyscale_multi(image);
-
-            var rect = new Rectangle(0, 0, grey.Width, grey.Height);
-            var data = grey.LockBits(rect, ImageLockMode.ReadWrite, grey.PixelFormat);
+        private byte[] bitmap_to_buffer(Bitmap input) {
+            var rect = new Rectangle(0, 0, input.Width, input.Height);
+            var data = input.LockBits(rect, ImageLockMode.ReadWrite, input.PixelFormat);
 
             var depth = Bitmap.GetPixelFormatSize(data.PixelFormat) / 8; //bytes per pixel
             var buffer = new byte[data.Width * data.Height * depth];
 
             //copy pixels to buffer
             Marshal.Copy(data.Scan0, buffer, 0, buffer.Length);
+            return buffer;
+        }
+        private int[] create_distribution(Bitmap input) {
+            int[] distribution = new int[256];
+            var buffer = bitmap_to_buffer(to_greyscale(input));
 
             //to get brightness of every pixel i+=4 is the right value
             for (int i = 0; i < buffer.Length; i += 8) {
@@ -307,11 +259,11 @@ namespace Bild_graustufen {
                     return Color.FromArgb((int)v, p, q);
             }
         }
-        public Bitmap show_black(Bitmap bmp) {
-            var input = new Bitmap(bmp);
+        public Bitmap show_black(Bitmap input) {
+            var bmp = new Bitmap(input);
 
-            var rect = new Rectangle(0, 0, input.Width, input.Height);
-            var data = input.LockBits(rect, ImageLockMode.ReadWrite, input.PixelFormat);
+            var rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
+            var data = bmp.LockBits(rect, ImageLockMode.ReadWrite, bmp.PixelFormat);
 
             var depth = Bitmap.GetPixelFormatSize(data.PixelFormat) / 8; //bytes per pixel
             var buffer = new byte[data.Width * data.Height * depth];
@@ -334,12 +286,11 @@ namespace Bild_graustufen {
             }
             Marshal.Copy(buffer, 0, data.Scan0, buffer.Length);
 
-            input.UnlockBits(data);
+            bmp.UnlockBits(data);
             MessageBox.Show("FERTIG");
-            return input;
+            return bmp;
         }
         public Bitmap depths(Bitmap input) {
-            var distribution = create_distribution(input);
             return brighten_up(input, 50, 25);
         }
         public Bitmap lights(Bitmap input) {
@@ -412,7 +363,6 @@ namespace Bild_graustufen {
         }
         public Bitmap change_saturation(Bitmap input, int change = 25) {
                 Bitmap bmp = new Bitmap(input);
-                //bmp = to_greyscale_multi(bmp);
                 var pixel = bmp.GetPixel(0, 0);
 
                 double[,,] image_hsv = new double[input.Width, input.Height, 3];
