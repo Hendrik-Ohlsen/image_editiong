@@ -296,7 +296,7 @@ namespace Bild_graustufen {
         public Bitmap lights(Bitmap input) {
             return brighten_up(input, -50, 190);
         }
-        public Bitmap contrast(Bitmap input, double contrast = 1.28) {
+        public Bitmap contrast(Bitmap input, double contrast = 28) {
             Bitmap bmp = new Bitmap(input);
             var pixel = bmp.GetPixel(0, 0);
 
@@ -331,10 +331,10 @@ namespace Bild_graustufen {
                     {
                         Parallel.For(0, height, j =>
                         {
-                            if (image_hsv[i, j, 2] > 190) {
+                            if (image_hsv[i, j, 2] > 0.75) { //
                                 image_hsv[i, j, 2] *= 1 + ((double)contrast / 100);
                             }
-                            else if (image_hsv[i, j, 2] < 75) {
+                            else if (image_hsv[i, j, 2] < 0.25) {
                                 image_hsv[i, j, 2] *= 1 - ((double)contrast / 100);
                             }
                         });

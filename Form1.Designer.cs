@@ -38,6 +38,8 @@
             this.txbContrast = new System.Windows.Forms.TextBox();
             this.btnSaturation = new System.Windows.Forms.Button();
             this.txbSaturation = new System.Windows.Forms.TextBox();
+            this.btnChangeImae = new System.Windows.Forms.Button();
+            this.btnSave = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.SuspendLayout();
@@ -162,6 +164,7 @@
             this.txbContrast.Name = "txbContrast";
             this.txbContrast.Size = new System.Drawing.Size(100, 22);
             this.txbContrast.TabIndex = 12;
+            this.txbContrast.Text = "25";
             // 
             // btnSaturation
             // 
@@ -181,11 +184,33 @@
             this.txbSaturation.TabIndex = 14;
             this.txbSaturation.Text = "25";
             // 
+            // btnChangeImae
+            // 
+            this.btnChangeImae.Location = new System.Drawing.Point(1210, 154);
+            this.btnChangeImae.Name = "btnChangeImae";
+            this.btnChangeImae.Size = new System.Drawing.Size(128, 23);
+            this.btnChangeImae.TabIndex = 15;
+            this.btnChangeImae.Text = "Landschaft";
+            this.btnChangeImae.UseVisualStyleBackColor = true;
+            this.btnChangeImae.Click += new System.EventHandler(this.btnChangeImae_Click);
+            // 
+            // btnSave
+            // 
+            this.btnSave.Location = new System.Drawing.Point(1210, 790);
+            this.btnSave.Name = "btnSave";
+            this.btnSave.Size = new System.Drawing.Size(128, 23);
+            this.btnSave.TabIndex = 16;
+            this.btnSave.Text = "Speichern";
+            this.btnSave.UseVisualStyleBackColor = true;
+            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1713, 902);
+            this.Controls.Add(this.btnSave);
+            this.Controls.Add(this.btnChangeImae);
             this.Controls.Add(this.txbSaturation);
             this.Controls.Add(this.btnSaturation);
             this.Controls.Add(this.txbContrast);
@@ -228,6 +253,8 @@
         private System.Windows.Forms.TextBox txbContrast;
         private System.Windows.Forms.Button btnSaturation;
         private System.Windows.Forms.TextBox txbSaturation;
+        private System.Windows.Forms.Button btnChangeImae;
+        private System.Windows.Forms.Button btnSave;
     }
 }
 

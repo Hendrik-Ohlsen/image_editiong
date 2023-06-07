@@ -12,112 +12,96 @@ namespace Bild_graustufen {
     internal class sharpening {
         editing util = new editing();
 
-        public Bitmap sharpe(Bitmap input) {
-            var grey = util.to_greyscale(input);
-            var der_right = derivative_to_right(grey);
-            var der_under = derivative_under(grey);
-            var der_mean = mean(der_under, der_right);
-            var edges = thresholding(der_mean);
-            return derivate_visual(edges);
-        }
-        private int[,] derivative_to_right(Bitmap input) {
-            Bitmap bmp = new Bitmap(input);
-            //bmp = to_greyscale_multi(bmp);
-            var pixel = bmp.GetPixel(0, 0);
+        public Bitmap Sharpen(Bitmap image, int strength=50) {
+            using (var bitmap = image as Bitmap) {
+                if (bitmap != null) {
+                    var sharpenImage = bitmap.Clone() as Bitmap;
 
-            double[,,] image_hsv = new double[input.Width, input.Height, 3];
+                    int width = image.Width;
+                    int height = image.Height;
 
-            var bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, bmp.PixelFormat);
+                    // Create sharpening filter.
+                    const int filterWidth = 5;
+                    const int filterHeight = 5;
 
-            int bytesPerPixel = Bitmap.GetPixelFormatSize(bmp.PixelFormat) / 8;
+                    var filter = new double[,]
+                        {
+                    {-1, -1, -1, -1, -1},
+                    {-1,  2,  2,  2, -1},
+                    {-1,  2, 16,  2, -1},
+                    {-1,  2,  2,  2, -1},
+                    {-1, -1, -1, -1, -1}
+                        };
 
-            int height = bmp.Height;
-            int width = bmp.Width;
-            int stride = bmpData.Stride;
-            //divide in n parts/taks
-            int[,] derivative = new int[width, height];
+                    double bias = 1.0 - strength/100.0;
+                    double factor = (strength/100.0) / 16.0;
 
-            unsafe {
-                byte* pointer = (byte*)bmpData.Scan0;
+                    var result = new Color[image.Width, image.Height];
 
-                Parallel.For(0, width, i =>
-                {
-                    Parallel.For(0, height, j =>
-                    {
-                        byte* pix = pointer + j * stride + i * bytesPerPixel;
-                        byte* pix_next = pointer + j * stride + i +1 * bytesPerPixel;
-                        derivative[i, j] = pix_next[0] - pix[0];
-                        //}
-                    });
-                });
-                return derivative;
-            }
-        }
-        private int[,] derivative_under(Bitmap input) {
-            Bitmap bmp = new Bitmap(input);
-            //bmp = to_greyscale_multi(bmp);
-            var pixel = bmp.GetPixel(0, 0);
+                    // Lock image bits for read/write.
+                    if (sharpenImage != null) {
+                        BitmapData pbits = sharpenImage.LockBits(new Rectangle(0, 0, width, height),
+                                                                    ImageLockMode.ReadWrite,
+                                                                    PixelFormat.Format24bppRgb);
 
-            double[,,] image_hsv = new double[input.Width, input.Height, 3];
+                        // Declare an array to hold the bytes of the bitmap.
+                        int bytes = pbits.Stride * height;
+                        var rgbValues = new byte[bytes];
 
-            var bmpData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, bmp.PixelFormat);
+                        // Copy the RGB values into the array.
+                        Marshal.Copy(pbits.Scan0, rgbValues, 0, bytes);
 
-            int bytesPerPixel = Bitmap.GetPixelFormatSize(bmp.PixelFormat) / 8;
+                        int rgb;
+                        // Fill the color array with the new sharpened color values.
+                        for (int x = 0; x < width; ++x) {
+                            for (int y = 0; y < height; ++y) {
+                                double red = 0.0, green = 0.0, blue = 0.0;
 
-            int height = bmp.Height;
-            int width = bmp.Width;
-            int stride = bmpData.Stride;
-            //divide in n parts/taks
-            int[,] derivative = new int[width, height];
+                                for (int filterX = 0; filterX < filterWidth; filterX++) {
+                                    for (int filterY = 0; filterY < filterHeight; filterY++) {
+                                        int imageX = (x - filterWidth / 2 + filterX + width) % width;
+                                        int imageY = (y - filterHeight / 2 + filterY + height) % height;
 
-            unsafe {
-                byte* pointer = (byte*)bmpData.Scan0;
+                                        rgb = imageY * pbits.Stride + 3 * imageX;
 
-                Parallel.For(0, width, i =>
-                {
-                    Parallel.For(0, height, j =>
-                    {
-                        byte* pix = pointer + j * stride + i * bytesPerPixel;
-                        byte* pix_next = pointer + j + 1 * stride + i * bytesPerPixel;
-                        derivative[i, j] = pix_next[0] - pix[0];
-                        //}
-                    });
-                });
-                return derivative;
-            }
-        }
-        private int[,] mean(int[,] der_1,  int[,] der_2) {
-            int[,] mean_der = new int[der_1.GetLength(0), der_2.GetLength(1)];
-            Parallel.For(0, der_1.GetLength(0), i =>
-            {
-                Parallel.For(0, der_1.GetLength(1), j =>
-                {
-                    mean_der[i, j] = Math.Max(Math.Min(((der_1[i, j] + der_2[i, j]) / 2),255), 0);
-                });
-            });
-            return mean_der;
-        }
-        private int[,] thresholding(int[,] derivative, int threshold = 128) {
-            int[,] edges = new int[derivative.GetLength(0), derivative.GetLength(1)];
-            Parallel.For(0, derivative.GetLength(0), i =>
-            {
-                Parallel.For(0, derivative.GetLength(1), j =>
-                {
-                    edges[i, j] = (derivative[i, j]> threshold) ? derivative[i, j] : 0;
-                });
-            });
-            return edges;
-        }
-        private Bitmap derivate_visual(int[,] derivative) {
-            var bmp_derivate = new Bitmap(derivative.GetLength(0), derivative.GetLength(1));
-            for(int i = 0; i< derivative.GetLength(0)-1; i++)
-            {
-                for(int j = 0; j< derivative.GetLength(1)-1; j++)
-                {
-                    bmp_derivate.SetPixel(i, j, Color.FromArgb(Math.Abs(derivative[i, j]), Math.Abs(derivative[i, j]), Math.Abs(derivative[i, j])));
+                                        red += rgbValues[rgb + 2] * filter[filterX, filterY];
+                                        green += rgbValues[rgb + 1] * filter[filterX, filterY];
+                                        blue += rgbValues[rgb + 0] * filter[filterX, filterY];
+                                    }
+
+                                    rgb = y * pbits.Stride + 3 * x;
+
+                                    int r = Math.Min(Math.Max((int)(factor * red + (bias * rgbValues[rgb + 2])), 0), 255);
+                                    int g = Math.Min(Math.Max((int)(factor * green + (bias * rgbValues[rgb + 1])), 0), 255);
+                                    int b = Math.Min(Math.Max((int)(factor * blue + (bias * rgbValues[rgb + 0])), 0), 255);
+
+                                    result[x, y] = Color.FromArgb(r, g, b);
+                                }
+                            }
+                        }
+
+                        // Update the image with the sharpened pixels.
+                        for (int x = 0; x < width; ++x) {
+                            for (int y = 0; y < height; ++y) {
+                                rgb = y * pbits.Stride + 3 * x;
+
+                                rgbValues[rgb + 2] = result[x, y].R;
+                                rgbValues[rgb + 1] = result[x, y].G;
+                                rgbValues[rgb + 0] = result[x, y].B;
+                            }
+                        }
+
+                        // Copy the RGB values back to the bitmap.
+                        Marshal.Copy(rgbValues, 0, pbits.Scan0, bytes);
+                        // Release image bits.
+                        sharpenImage.UnlockBits(pbits);
+                    }
+
+                    return sharpenImage;
                 }
             }
-            return bmp_derivate;
+            return null;
         }
+
     }
 }

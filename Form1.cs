@@ -7,6 +7,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.Linq;
+using System.Media;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -120,9 +121,11 @@ namespace Bild_graustufen {
 
         private void btnSharpen_Click(object sender, EventArgs e) {
             var sharp_util = new sharpening();
-            pictureBox1.Image = sharp_util.sharpe(image);
+            pictureBox1.Image = sharp_util.Sharpen(image, 1);
             pictureBox1.Refresh();
             pictureBox1.Visible = true;
+            MessageBox.Show("sharp as me");
+            SystemSounds.Beep.Play();
         }
 
         private void btnContrast_Click(object sender, EventArgs e) {
@@ -135,6 +138,17 @@ namespace Bild_graustufen {
             pictureBox1.Image = func.change_saturation(image, Convert.ToInt32((txbSaturation.Text).ToString()));
             pictureBox1.Refresh();
             pictureBox1.Visible = true;
+        }
+
+        private void btnChangeImae_Click(object sender, EventArgs e) {
+            image = new Bitmap("C:\\Users\\Hendr\\OneDrive\\Veröffentlichen\\Instagram\\Hochgeladen\\IMG_1463-HDR-Bearbeitet.jpg");
+            pictureBox1.Image = image;
+            pictureBox1.Refresh();
+            pictureBox1.Visible = true;
+        }
+
+        private void btnSave_Click(object sender, EventArgs e) {
+            pictureBox1.Image.Save("C:\\Users\\Hendr\\Desktop\\edit.png");
         }
     }
 }
