@@ -6,6 +6,7 @@ using System.Data;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Media;
 using System.Runtime.InteropServices;
@@ -14,141 +15,205 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using static System.Net.Mime.MediaTypeNames;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace Bild_graustufen {
     public partial class Form1 : Form {
         Bitmap image;
         editing func;
+        string image_path;
 
         public Form1() {
             InitializeComponent();
         }
 
         private void Form1_Load(object sender, EventArgs e) {
-            string image_path = @"C:\Users\Hendr\OneDrive\Veröffentlichen\Instagram\Hochgeladen\IMG_4575-Bearbeitet.jpg";
-            image = new Bitmap(image_path);
+            image = get_file();
             func = new editing();
 
-            pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
-            pictureBox1.ClientSize = new Size(image.Width / 10, image.Height / 10);
+            //pbImage.SizeMode = PictureBoxSizeMode.StretchImage;
+            //var max_widt = Width / 2;
+            //pbImage.ClientSize = new Size(image.Width / 10, image.Height / 10);
+            //pbImage.ClientSize = new Size(max_widt, Height / 2);
 
-            show_color_image();
+            change_image(pbImage, image);
+            change_image(pbHistogram, func.create_histogram(image), PictureBoxSizeMode.StretchImage);
+            //txbFileName.Text = image_path;
         }
-        private Bitmap to_sw(Bitmap input) {
-            Bitmap s_w = new Bitmap(input);
-            for (int i = 0; i < s_w.Width; i++) {
-                for (int j = 0; j < s_w.Height; j++) {
-                    s_w.SetPixel(i, j, mean_pixel(s_w.GetPixel(i, j)));
-                }
+        private Bitmap get_file() {
+            var codecs = ImageCodecInfo.GetImageEncoders();
+            var codecFilter = "Image Files|";
+            foreach (var codec in codecs) {
+                codecFilter += codec.FilenameExtension + ";";
             }
-            return s_w;
+            openFileDialog.Filter = codecFilter;
+
+            openFileDialog.Title = string.Empty;
+            openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+            openFileDialog.ShowDialog();
+            try {
+                image_path = openFileDialog.FileName;
+                return new Bitmap(openFileDialog.FileName);
+            }
+            catch {
+                MessageBox.Show("Keine Datei ausgewählt!");
+                get_file();
+            }
+            return new Bitmap(openFileDialog.FileName);
         }
-        private Color mean_pixel(Color pixel) {
-            int value = (pixel.R + pixel.G + pixel.B) / 3;
-            return Color.FromArgb(value, value, value);
+        private bool save_file(Bitmap bmp) {
+            saveFileDialog1.Filter = "JPEG | .jpeg";
+            saveFileDialog1.Title = string.Empty;
+            saveFileDialog1.InitialDirectory = image_path;
+            saveFileDialog1.ShowDialog();
+            try {
+                bmp.Save(saveFileDialog1.FileName, ImageFormat.Jpeg);
+                return true;
+            }
+            catch {
+                MessageBox.Show("Fehler beim Speichern");
+                save_file(bmp);
+            }
+            return true;
         }
-
-        private void change_pixel(int x, int y, BitmapData bmpData) {
-            unsafe {
-                byte* ptr = (byte*)bmpData.Scan0;
-                int byte_per_pixel = Bitmap.GetPixelFormatSize(bmpData.PixelFormat)/8;
-                int stride = bmpData.Stride;
-
-                byte* pixel = ptr + (y * stride) + (x * byte_per_pixel);
-                byte gray_scale_Value = (byte)((pixel[0] + pixel[1] + pixel[2]+ pixel[3])/3);
-
-                pixel[0] = gray_scale_Value;
-                pixel[1] = gray_scale_Value;
-                pixel[2] = gray_scale_Value;
+        private void change_value_bar(TrackBar trb, int value) {
+            try {
+                trb.Value = value;
+            }
+            catch {
+                MessageBox.Show("Der Wert liegt außerhalb des zugelassenen Bereiches. 0 Wurde übergeben");
+                trb.Value = 0;
             }
         }
-        private void show_color_image() {
-            pictureBox1.Image = image;
-            pictureBox1.Refresh();
-            pictureBox1.Visible = true;
+        private int check_input(TextBox txbobx) {
+            if (txbobx.Text == "" || txbobx.Text =="-") {
+                return 0;
+            }
+            try {
+                return Convert.ToInt32(txbobx.Text);
+            }
+            catch {
+                MessageBox.Show("Der eingegbene Wert ist keine Zahl gültig. " +
+                    "Es wurde 0 übergeben.");
+                txbobx.Text = 0.ToString();
+                return 0;
+            }
         }
-
-        private void btnGreysacle_Click(object sender, EventArgs e) {
-            pictureBox1.Image = to_sw(image);
-            pictureBox1.Refresh();
-            pictureBox1.Visible = true;
+        private void change_image(PictureBox pictureBox, Bitmap image, PictureBoxSizeMode pbsm = PictureBoxSizeMode.Zoom) {
+            pictureBox.SizeMode = pbsm;
+            //pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+            pictureBox.Image = image;
+            pictureBox.Refresh();
+            pictureBox.Visible = true;
         }
-
         private void btnReset_Click(object sender, EventArgs e) {
-            show_color_image();
+            change_image(pbImage, image = new Bitmap(image_path));
+            change_image(pbHistogram, func.create_histogram(image), PictureBoxSizeMode.StretchImage);
         }
-
         private void btnGreyMulti_Click(object sender, EventArgs e) {
-            //pictureBox1.Image = func.to_greyscale_multi(image);
-            pictureBox1.Image = func.to_greyscale(image);
-            pictureBox1.Refresh();
-            pictureBox1.Visible = true;
-            //Test();
+            change_image(pbImage, image = func.to_greyscale(image));
         }
 
         private void btnBrightenup_Click(object sender, EventArgs e) {
-            pictureBox1.Image = func.brighten_up(image, Convert.ToInt32(txbBrightness.Text));
-            pictureBox1.Refresh();
-            pictureBox1.Visible = true;
-            Bitmap test = func.create_histogram(image);
-            pictureBox2.Image = test;
-            pictureBox2.Refresh();
-            pictureBox2.Visible = true;
-        }
-
-        private void getHistogram_Click(object sender, EventArgs e) {
-            pictureBox2.SizeMode = PictureBoxSizeMode.StretchImage;
-            pictureBox2.Image = func.create_histogram(image);
-            pictureBox2.Refresh();
-            pictureBox2.Visible = true;
-
-            pictureBox1.Image = func.show_black(image);
-            pictureBox1.Refresh();
-            pictureBox1.Visible = true;
+            change_image(pbImage, image = func.brighten_up(image, trbBrightness.Value));
+            change_image(pbHistogram, func.create_histogram(image), PictureBoxSizeMode.StretchImage);
         }
 
         private void btnDeeps_Click(object sender, EventArgs e) {
-            pictureBox1.Image = func.depths(image);
-            pictureBox1.Refresh();
-            pictureBox1.Visible = true;
+            change_image(pbImage, image = func.restore_depths(image, trbDepths.Value));
+            change_image(pbHistogram, func.create_histogram(image), PictureBoxSizeMode.StretchImage);
         }
 
         private void btnLights_Click(object sender, EventArgs e) {
-            pictureBox1.Image = func.lights(image);
-            pictureBox1.Refresh();
-            pictureBox1.Visible = true;
+            change_image(pbImage, image = func.restore_lights(image, trbLights.Value));
+            change_image(pbHistogram, func.create_histogram(image), PictureBoxSizeMode.StretchImage);
         }
 
         private void btnSharpen_Click(object sender, EventArgs e) {
             var sharp_util = new sharpening();
-            pictureBox1.Image = sharp_util.Sharpen(image, 1);
-            pictureBox1.Refresh();
-            pictureBox1.Visible = true;
-            MessageBox.Show("sharp as me");
-            SystemSounds.Beep.Play();
+            change_image(pbImage, image = sharp_util.Sharpen(image));
         }
 
         private void btnContrast_Click(object sender, EventArgs e) {
-            pictureBox1.Image = func.contrast(image, Convert.ToDouble(txbContrast.Text));
-            pictureBox1.Refresh();
-            pictureBox1.Visible = true;
+            change_image(pbImage,image = func.change_contrast(image, trbContrast.Value));
+            change_image(pbHistogram, func.create_histogram(image), PictureBoxSizeMode.StretchImage);
         }
 
         private void btnSaturation_Click(object sender, EventArgs e) {
-            pictureBox1.Image = func.change_saturation(image, Convert.ToInt32((txbSaturation.Text).ToString()));
-            pictureBox1.Refresh();
-            pictureBox1.Visible = true;
-        }
-
-        private void btnChangeImae_Click(object sender, EventArgs e) {
-            image = new Bitmap("C:\\Users\\Hendr\\OneDrive\\Veröffentlichen\\Instagram\\Hochgeladen\\IMG_1463-HDR-Bearbeitet.jpg");
-            pictureBox1.Image = image;
-            pictureBox1.Refresh();
-            pictureBox1.Visible = true;
+            change_image(pbImage, image = func.change_saturation(image, trbSaturation.Value));
+            change_image(pbHistogram, func.create_histogram(image), PictureBoxSizeMode.StretchImage);
         }
 
         private void btnSave_Click(object sender, EventArgs e) {
-            pictureBox1.Image.Save("C:\\Users\\Hendr\\Desktop\\edit.png");
+            save_file(image);
+        }
+        private void btnVignetting_Click(object sender, EventArgs e) {
+            change_image(pbImage, image = func.create_vignette(image));
+            change_image(pbHistogram, func.create_histogram(image), PictureBoxSizeMode.StretchImage);
+        }
+
+        private void btnTint_Click(object sender, EventArgs e) {
+            change_image(pbImage, image = func.Tint(image, trbTint.Value));
+        }
+
+        private void trbBrightness_Scroll(object sender, EventArgs e) {
+            txbBrightness.Text = trbBrightness.Value.ToString();
+        }
+
+        private void pictureBox1_Paint(object sender, PaintEventArgs e) {
+            change_image(pbHistogram, func.create_histogram(image), PictureBoxSizeMode.StretchImage);
+        }
+
+        private void trbDepths_Scroll(object sender, EventArgs e) {
+            txbDepths.Text = trbDepths.Value.ToString();
+        }
+        private void trbLights_Scroll(object sender, EventArgs e) {
+            txbLights.Text = trbLights.Value.ToString();
+        }
+
+        private void txbBrightness_TextChanged(object sender, EventArgs e) {
+            change_value_bar(trbBrightness, check_input(txbBrightness));
+        }
+
+        private void txbBrightness_Enter(object sender, EventArgs e) {
+            change_image(pbImage, func.brighten_up(image, trbBrightness.Value));
+        }
+
+        private void txbDepths_TextChanged(object sender, EventArgs e) {
+            change_value_bar(trbDepths, check_input(txbDepths));
+        }
+
+        private void txbLights_TextChanged(object sender, EventArgs e) {
+            change_value_bar(trbLights, check_input(txbLights));
+        }
+
+        private void trbTint_Scroll(object sender, EventArgs e) {
+            txbTint.Text = trbTint.Value.ToString();
+        }
+
+        private void txbTint_TextChanged(object sender, EventArgs e) {
+            change_value_bar(trbTint, check_input(txbTint));
+        }
+
+        private void trbContrast_Scroll(object sender, EventArgs e) {
+            txbContrast.Text = trbContrast.Value.ToString();
+        }
+
+        private void txbContrast_TextChanged(object sender, EventArgs e) {
+            change_value_bar(trbContrast, check_input(txbContrast));
+        }
+
+        private void trbSaturation_Scroll(object sender, EventArgs e) {
+            txbSaturation.Text = trbSaturation.Value.ToString();
+        }
+
+        private void txbSaturation_TextChanged(object sender, EventArgs e) {
+            change_value_bar(trbSaturation, check_input(txbSaturation));
+        }
+
+        private void btnChangeImage_Click(object sender, EventArgs e) {
+            change_image(pbImage, image = get_file());
+            change_image(pbHistogram, func.create_histogram(image), PictureBoxSizeMode.StretchImage);
         }
     }
 }

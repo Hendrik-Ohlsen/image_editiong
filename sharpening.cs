@@ -7,12 +7,16 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using static System.Net.Mime.MediaTypeNames;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Collections.ObjectModel;
+using System.Reflection;
 
 namespace Bild_graustufen {
     internal class sharpening {
         editing util = new editing();
 
-        public Bitmap Sharpen(Bitmap image, int strength=50) {
+        public Bitmap Sharpen(Bitmap image) {
+            int strength = 50;
             using (var bitmap = image as Bitmap) {
                 if (bitmap != null) {
                     var sharpenImage = bitmap.Clone() as Bitmap;
@@ -21,8 +25,8 @@ namespace Bild_graustufen {
                     int height = image.Height;
 
                     // Create sharpening filter.
-                    const int filterWidth = 5;
-                    const int filterHeight = 5;
+                    int filterWidth = 5;
+                    int filterHeight = 5;
 
                     var filter = new double[,]
                         {
@@ -40,9 +44,7 @@ namespace Bild_graustufen {
 
                     // Lock image bits for read/write.
                     if (sharpenImage != null) {
-                        BitmapData pbits = sharpenImage.LockBits(new Rectangle(0, 0, width, height),
-                                                                    ImageLockMode.ReadWrite,
-                                                                    PixelFormat.Format24bppRgb);
+                        BitmapData pbits = sharpenImage.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
 
                         // Declare an array to hold the bytes of the bitmap.
                         int bytes = pbits.Stride * height;
@@ -52,7 +54,6 @@ namespace Bild_graustufen {
                         Marshal.Copy(pbits.Scan0, rgbValues, 0, bytes);
 
                         int rgb;
-                        // Fill the color array with the new sharpened color values.
                         for (int x = 0; x < width; ++x) {
                             for (int y = 0; y < height; ++y) {
                                 double red = 0.0, green = 0.0, blue = 0.0;
@@ -102,6 +103,5 @@ namespace Bild_graustufen {
             }
             return null;
         }
-
     }
 }
